@@ -195,16 +195,22 @@ export class Ledger<M extends object> {
       metadata: { version: 1 },
     };
     return JSON.stringify(obj, (_, v) =>
-      typeof v === "bigint" ? `bigint:${v.toString()}` : v,
+      typeof v === "bigint" ? v.toString() : v,
     );
   }
 
   public jsonLoad(str: string): void {
-    const obj = JSON.parse(str, (_, v) =>
-      typeof v === "string" && v.startsWith("bigint:")
-        ? BigInt(v.slice("bigint:".length))
-        : v,
-    );
+    const obj = JSON.parse(str, (_, v) => {
+      if (typeof v === "string") {
+        try {
+          return BigInt(v);
+        } catch (e) {
+          return v;
+        }
+      }
+
+      return v;
+    });
 
     // migrate data if needed
 
